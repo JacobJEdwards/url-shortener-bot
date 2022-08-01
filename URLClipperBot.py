@@ -1,12 +1,14 @@
 import logging
-import requests
 import urllib
-# response_API = requests.get('https://cutt.ly')
-# print(response_API.status_code)
+import redis
 
+import requests
 import validators
 
 from telegram import __version__ as TG_VER
+
+# response_API = requests.get('https://cutt.ly')
+# print(response_API.status_code)
 
 try:
     from telegram import __version_info__
@@ -23,17 +25,12 @@ if __version_info__ < (20, 0, 0, "alpha", 1):
 from telegram import *
 
 from telegram.ext import (
-    Updater,
     Application,
-    ApplicationBuilder,
     CommandHandler,
-    ConversationHandler,
-    ContextTypes,
     MessageHandler,
     filters,
     CallbackContext,
-    PreCheckoutQueryHandler,
-    ShippingQueryHandler
+    CallbackQueryHandler
 )
 
 # Enable logging
@@ -43,18 +40,51 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+r = redis.Redis()
+
+
 # links to api
 def URLShorten(url):
     key = '27c6fb4f18e8f88b30baf342df13ef98d0aae'
     toShorten = urllib.parse.quote(url)
-    r = requests.get('http://cutt.ly/api/api.php?key={}&short={}'.format(key, toShorten)).text
-    shortURL = r.rsplit('"')[15].replace('\\', "")
+    data = requests.get('http://cutt.ly/api/api.php?key={}&short={}'.format(key, toShorten)).text
+    r.sadd(str(userID), data)
+    shortURL: str = data.rsplit('"')[15].replace('\\', "")
     return shortURL
 
 
 # start function
 async def start(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text('Hello')
+    user = update.effective_user.first_name
+    global userID
+    userID = update.effective_user.id
+    uses = r.scard(str(userID))
+    if uses == 0:
+        await update.message.reply_text(f'Hello {user}, welcome to URL Clipper Bot! \nIf you need any help, please '
+                                        f'use the command /help')
+    elif uses < 10:
+        await update.message.reply_text(f'Welcome back {user}\nYou have {10 - uses} uses remaining!')
+    else:
+        await update.message.reply_text(f'Welcome back {user}')
+
+    keyboard = [
+        [
+            InlineKeyboardButton("Option 1", callback_data="1"),
+            InlineKeyboardButton("Option 2", callback_data="2"),
+        ],
+        [InlineKeyboardButton("Option 3", callback_data="3")],
+    ]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("Please choose:", reply_markup=reply_markup)
+
+
+async def button(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+
+    await query.answer()
+    await query.edit_message_text(text=f"Selected option: {query.data}")
+
 
 
 # help function
@@ -85,6 +115,7 @@ def main() -> None:
     # basic command handlers
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('help', helpInfo))
+    application.add_handler(CallbackQueryHandler(button))
 
     # handles unknown commands
     application.add_handler(MessageHandler(filters.COMMAND, unknownCommand))
