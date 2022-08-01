@@ -56,35 +56,33 @@ def URLShorten(url):
 # start function
 async def start(update: Update, context: CallbackContext) -> None:
     user = update.effective_user.first_name
-    global userID
     userID = update.effective_user.id
     uses = r.scard(str(userID))
     if uses == 0:
-        await update.message.reply_text(f'Hello {user}, welcome to URL Clipper Bot! \nIf you need any help, please '
-                                        f'use the command /help')
+        await update.message.reply_text(f'Hello {user}, welcome to URL Clipper Bot! \nIf you need any help, feel '
+                                        f'free to contact me through support!')
     elif uses < 10:
         await update.message.reply_text(f'Welcome back {user}\nYou have {10 - uses} uses remaining!')
     else:
         await update.message.reply_text(f'Welcome back {user}')
 
     keyboard = [
+        [KeyboardButton("My URLs", callback_data="1")],
         [
-            InlineKeyboardButton("Option 1", callback_data="1"),
-            InlineKeyboardButton("Option 2", callback_data="2"),
+            KeyboardButton("Premium", callback_data="2"),
+            KeyboardButton("Support!", callback_data="3"),
         ],
-        [InlineKeyboardButton("Option 3", callback_data="3")],
     ]
 
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Please choose:", reply_markup=reply_markup)
+    menu_markup = ReplyKeyboardMarkup(keyboard)
+    await update.message.reply_text('Please select an option: ', reply_markup=menu_markup)
 
 
-async def button(update: Update, context: CallbackContext) -> None:
-    query = update.callback_query
-
-    await query.answer()
-    await query.edit_message_text(text=f"Selected option: {query.data}")
-
+# async def button(update: Update, context: CallbackContext) -> None:
+#     query = update.callback_query
+#
+#     await query.answer()
+#     await query.edit_message_text(text=f"Selected option: {query.data}")
 
 
 # help function
@@ -92,13 +90,31 @@ async def helpInfo(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text('Help!')
 
 
+async def upgrade(update: Update, context: CallbackContext) -> None:
+    if r.sismember('premium', update.effective_user.id) == 1:
+        await update.message.reply_text('You are premium')
+    else:
+        r.sadd('premium', update.effective_user.id)
+
+
 # unknown command function
 async def unknownCommand(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text('Unknown command')
 
 
+# my urls function
+async def myURLs(update: Update, context: CallbackContext) -> None:
+    global userID
+    userID = update.effective_user.id
+    urlData = str(r.smembers(userID)).split(',')
+    print(urlData)
+
+
 async def checkURL(update: Update, context: CallbackContext) -> None:
     # checks text is valid url
+    global userID
+    userID = update.effective_user.id
+
     user_message = update.message.text
     if validators.url(user_message):
         await update.message.reply_text('Valid URL')
@@ -115,10 +131,13 @@ def main() -> None:
     # basic command handlers
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('help', helpInfo))
-    application.add_handler(CallbackQueryHandler(button))
 
     # handles unknown commands
     application.add_handler(MessageHandler(filters.COMMAND, unknownCommand))
+    # handles the pre-made keyboard
+    application.add_handler(MessageHandler(filters.Regex('Support!'), helpInfo))
+    application.add_handler(MessageHandler(filters.Regex('My URLs'), myURLs))
+    application.add_handler(MessageHandler(filters.Regex('Premium'), upgrade))
 
     # message handler - URL check
     application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, checkURL))
