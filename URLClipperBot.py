@@ -1,15 +1,11 @@
 import logging
 import urllib
 import redis
-
 import requests
 
 from typing import Dict
 
 from telegram import __version__ as TG_VER
-
-# response_API = requests.get('https://cutt.ly')
-# print(response_API.status_code)
 
 try:
     from telegram import __version_info__
@@ -46,17 +42,28 @@ r = redis.Redis()
 
 # links to api
 async def URLShorten(update: Update, context: CallbackContext) -> None:
-    key = ***REMOVED***
-    toShorten = urllib.parse.quote(update.message.text)
-    data = requests.get('http://cutt.ly/api/api.php?key={}&short={}'.format(key, toShorten)).text
-    r.sadd(str(update.effective_user.id), data)
-    shortURL: str = data.rsplit('"')[15].replace('\\', "")
-    await update.message.reply_text(shortURL)
+    if r.scard(str(update.effective_user.id)) < 6 or r.sismember('premium', update.effective_user.id):
+        chatID = update.message.chat_id
+        messageID = await context.bot.send_message(text='fetching url...', chat_id=chatID)
+        key = ***REMOVED***
+        toShorten = urllib.parse.quote(update.message.text)
+        data = requests.get('http://cutt.ly/api/api.php?key={}&short={}'.format(key, toShorten)).text
+        r.sadd(str(update.effective_user.id), data)
+        shortURL: str = data.rsplit('"')[15].replace('\\', "")
+
+        await context.bot.edit_message_text(message_id=messageID["message_id"], chat_id=chatID, text='Here is your '
+                                                                                                     'shortened URL:')
+        await update.message.reply_text(shortURL)
+        # to finish
+    else:
+        await update.message.reply_text('Sorry you have reached the free trial limit!\nPlease upgrade to premium to '
+                                        'continue')
 
 
 # start function
 async def start(update: Update, context: CallbackContext) -> None:
     userName = update.effective_user.first_name
+    userID = update.effective_user.id
 
     try:
         numUses = r.scard(str(userID))
@@ -66,11 +73,11 @@ async def start(update: Update, context: CallbackContext) -> None:
     if numUses == 0:
         await update.message.reply_text(f'Hello {userName}, welcome to URL Clipper Bot! \nIf you need any help, feel '
                                         f'free to contact me through support!')
-    elif numUses < 10:
-        if premium:
+    elif numUses < 6:
+        if r.sismember('premium', userID) == 1:
             await update.message.reply_text(f'Welcome back {userName}')
         else:
-            await update.message.reply_text(f'Welcome back {userName}\nYou have {10 - numUses} uses remaining!')
+            await update.message.reply_text(f'Welcome back {userName}\nYou have {5 - numUses} uses remaining!')
     else:
         await update.message.reply_text(f'Welcome back {userName}')
 
@@ -93,11 +100,12 @@ async def start(update: Update, context: CallbackContext) -> None:
 #     await query.edit_message_text(text=f"Selected option: {query.data}")
 
 
-# help function
+# help function - to expand
 async def helpInfo(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text('Help!')
 
 
+# upgrade to premium - to include payment
 async def upgrade(update: Update, context: CallbackContext) -> None:
     if r.sismember('premium', update.effective_user.id):
         await update.message.reply_text('You are premium')
@@ -110,41 +118,37 @@ async def unknownCommand(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text('Unknown command')
 
 
-# my urls function
+# my urls function - to complete
 async def myURLs(update: Update, context: CallbackContext) -> None:
     uses = r.scard(update.effective_user.id)
     if uses == 0:
-        await update.message.reply_text('You have no urls')
-    try:
+        await update.message.reply_text('You have not shortened any URLs yet!')
+    else:
         urlData = str(r.smembers(update.effective_user.id)).split(',')
         print(urlData)
 
-    except:
-        await update.message.reply_text('You have no urls')
 
-
-async def getUserInfo(update: Update, context: CallbackContext) -> None:
-    global userID
-    global userName
-    global premium
-    global numUses
-
-    userID = update.effective_user.id
-    userName = update.effective_user.first_name
-
-    if r.sismember('premium', userID) == 1:
-        premium = True
-    else:
-        premium = False
-
-    try:
-        numUses = r.scard(str(userID))
-    except:
-        numUses = 0
+# async def getUserInfo(update: Update, context: CallbackContext) -> None:
+#     global userID
+#     global userName
+#     global premium
+#     global numUses
+#
+#     userID = update.effective_user.id
+#     userName = update.effective_user.first_name
+#
+#     if r.sismember('premium', userID) == 1:
+#         premium = True
+#     else:
+#         premium = False
+#
+#     try:
+#         numUses = r.scard(str(userID))
+#     except:
+#         numUses = 0
 
 
 def main() -> None:
-    persistance = PicklePersistence(filepath='URLClipperBot')
     # creates application and passes the api token
     application = Application.builder().token("5524215935:AAFnV8SarFii_QaPzw7InyqniROsbVmmrPs").build()
 
