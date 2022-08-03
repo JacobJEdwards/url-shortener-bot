@@ -1,3 +1,17 @@
+# TO DO
+# Complete my urls function
+# Add payment
+# test on multiple devices
+
+# future:
+# link to other bots
+# create chat for logging purposes visible to me
+# premium on one bot, premium on every bot
+# work with databases instead of redis
+# look into hosting if heroku doesn't pan out - eventually hope to host on a raspberry pi
+# make money
+
+
 import logging
 import urllib
 import redis
