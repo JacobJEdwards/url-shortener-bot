@@ -61,7 +61,7 @@ PAYMENT_TOKEN = 'pk_test_51LQZq4K5tAPUABZW9u9rUKSxSpMvuWRGAhByInPoXw97xKOKSdUCEE
 
 # links to api
 async def URLShorten(update: Update, context: CallbackContext) -> None:
-    if r.scard(str(update.effective_user.id)) < 7 or r.sismember('premium', update.effective_user.id):
+    if r.scard(str(update.effective_user.id)) < 2 or r.sismember('premium', update.effective_user.id):
         chatID = update.message.chat_id
         messageID = await context.bot.send_message(text='fetching url...', chat_id=chatID)
         key = ***REMOVED***
@@ -80,7 +80,7 @@ async def URLShorten(update: Update, context: CallbackContext) -> None:
         inlineKeyboard = [[InlineKeyboardButton('Upgrade to Premium', callback_data='1')]]
         reply_markup = InlineKeyboardMarkup(inlineKeyboard)
 
-        await update.message.reply_text(' ', reply_markup=reply_markup)
+        await update.message.reply_text('Click:', reply_markup=reply_markup)
 
 
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -91,7 +91,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
     await query.answer()
 
-    await query.edit_message_text(text=f"Selected option: {query.data}")
+    await query.edit_message_text(text='Premium')
 
 
 # start function
@@ -115,13 +115,19 @@ async def start(update: Update, context: CallbackContext) -> None:
     else:
         await update.message.reply_text(f'Welcome back {userName}')
 
-    keyboard = [
-        [KeyboardButton("My URLs", callback_data="1")],
-        [
-            KeyboardButton("Premium", callback_data="2"),
-            KeyboardButton("Support!", callback_data="3"),
-        ],
-    ]
+    if r.sismember('premium', update.effective_user.id):
+        keyboard = [
+            [KeyboardButton("My URLs", callback_data="1")],
+            [KeyboardButton("Support!", callback_data="3")],
+        ]
+    else:
+        keyboard = [
+            [KeyboardButton("My URLs", callback_data="1")],
+            [
+                KeyboardButton("Premium", callback_data="2"),
+                KeyboardButton("Support!", callback_data="3"),
+            ],
+        ]
 
     menu_markup = ReplyKeyboardMarkup(keyboard)
     await update.message.reply_text('Please select an option: ', reply_markup=menu_markup)
