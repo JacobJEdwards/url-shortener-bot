@@ -54,6 +54,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 r = redis.Redis()
 
 PAYMENT_TOKEN = 'pk_test_51LQZq4K5tAPUABZW9u9rUKSxSpMvuWRGAhByInPoXw97xKOKSdUCEEaJbqz7hE2aFbixiVPLFRbrR1FMnFmUlfMh00MMPtRlat'
@@ -64,16 +65,20 @@ async def URLShorten(update: Update, context: CallbackContext) -> None:
     if r.scard(str(update.effective_user.id)) < 2 or r.sismember('premium', update.effective_user.id):
         chatID = update.message.chat_id
         messageID = await context.bot.send_message(text='fetching url...', chat_id=chatID)
+
         key = ***REMOVED***
+
         toShorten = urllib.parse.quote(update.message.text)
+
         data = requests.get('http://cutt.ly/api/api.php?key={}&short={}'.format(key, toShorten)).text
+
         r.sadd(str(update.effective_user.id), data)
         shortURL: str = data.rsplit('"')[15].replace('\\', "")
 
         await context.bot.edit_message_text(message_id=messageID["message_id"], chat_id=chatID, text='Here is your '
                                                                                                      'shortened URL:')
         await update.message.reply_text(shortURL)
-        # to finish
+
     else:
         await update.message.reply_text('Sorry you have reached the free trial limit!\nPlease upgrade to premium to '
                                         'continue')
@@ -99,6 +104,7 @@ async def start(update: Update, context: CallbackContext) -> None:
     userName = update.effective_user.first_name
     userID = update.effective_user.id
 
+    # used try except incase it being empty returns an error
     try:
         numUses = r.scard(str(userID))
     except:
@@ -107,14 +113,16 @@ async def start(update: Update, context: CallbackContext) -> None:
     if numUses == 0:
         await update.message.reply_text(f'Hello {userName}, welcome to URL Clipper Bot! \nIf you need any help, feel '
                                         f'free to contact me through support!')
+    elif r.sismember('premium', userID) == 1:
+        await update.message.reply_text(f'Welcome back {userName}')
+
     elif numUses < 6:
-        if r.sismember('premium', userID) == 1:
-            await update.message.reply_text(f'Welcome back {userName}')
-        else:
-            await update.message.reply_text(f'Welcome back {userName}\nYou have {5 - numUses} uses remaining!')
+        await update.message.reply_text(f'Welcome back {userName}\nYou have {5 - numUses} uses remaining!')
+
     else:
         await update.message.reply_text(f'Welcome back {userName}')
 
+    # different keyboards if premium or not - to also be added to premium function
     if r.sismember('premium', update.effective_user.id):
         keyboard = [
             [KeyboardButton("My URLs", callback_data="1")],
@@ -133,13 +141,6 @@ async def start(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text('Please select an option: ', reply_markup=menu_markup)
 
 
-# async def button(update: Update, context: CallbackContext) -> None:
-#     query = update.callback_query
-#
-#     await query.answer()
-#     await query.edit_message_text(text=f"Selected option: {query.data}")
-
-
 # help function - to expand
 async def helpInfo(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text('Help!')
@@ -155,7 +156,7 @@ async def upgrade(update: Update, context: CallbackContext) -> None:
 
 # unknown command function
 async def unknownCommand(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text('Unknown command')
+    await update.message.reply_text('Unknown command\nPlease use /help for help, or send a URL to shorten!')
 
 
 # my urls function - to complete
