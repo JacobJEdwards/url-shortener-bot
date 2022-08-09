@@ -1,4 +1,5 @@
 # TO DO
+# redis doesnt work with heroku - use a database ! (learn how to use sql with python)
 # Complete my urls function
 # Add payment
 # test on multiple devices
@@ -6,19 +7,18 @@
 # future:
 # link to other bots
 # create chat for logging purposes visible to me
-# premium on one bot, premium on every bot
+# premium on one bot, premium on every bot (?)
 # work with databases instead of redis
 # look into hosting if heroku doesn't pan out - eventually hope to host on a raspberry pi
 # make money
+# get bitches
 
 
 import logging
 import urllib
+
 import redis
 import requests
-
-from typing import Dict
-
 from telegram import __version__ as TG_VER
 
 try:
@@ -42,7 +42,10 @@ from telegram.ext import (
     filters,
     CallbackContext,
     CallbackQueryHandler,
-    PicklePersistence
+    ContextTypes,
+    PreCheckoutQueryHandler,
+    PicklePersistence,
+    ShippingQueryHandler
 )
 
 # Enable logging
@@ -53,10 +56,12 @@ logger = logging.getLogger(__name__)
 
 r = redis.Redis()
 
+PAYMENT_TOKEN = 'pk_test_51LQZq4K5tAPUABZW9u9rUKSxSpMvuWRGAhByInPoXw97xKOKSdUCEEaJbqz7hE2aFbixiVPLFRbrR1FMnFmUlfMh00MMPtRlat'
+
 
 # links to api
 async def URLShorten(update: Update, context: CallbackContext) -> None:
-    if r.scard(str(update.effective_user.id)) < 6 or r.sismember('premium', update.effective_user.id):
+    if r.scard(str(update.effective_user.id)) < 7 or r.sismember('premium', update.effective_user.id):
         chatID = update.message.chat_id
         messageID = await context.bot.send_message(text='fetching url...', chat_id=chatID)
         key = ***REMOVED***
@@ -72,6 +77,21 @@ async def URLShorten(update: Update, context: CallbackContext) -> None:
     else:
         await update.message.reply_text('Sorry you have reached the free trial limit!\nPlease upgrade to premium to '
                                         'continue')
+        inlineKeyboard = [[InlineKeyboardButton('Upgrade to Premium', callback_data='1')]]
+        reply_markup = InlineKeyboardMarkup(inlineKeyboard)
+
+        await update.message.reply_text(' ', reply_markup=reply_markup)
+
+
+async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Parses the CallbackQuery and updates the message text."""
+    query = update.callback_query
+
+    # CallbackQueries need to be answered, even if no notification to the user is needed
+    # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
+    await query.answer()
+
+    await query.edit_message_text(text=f"Selected option: {query.data}")
 
 
 # start function
@@ -169,6 +189,8 @@ def main() -> None:
     # basic command handlers
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('help', helpInfo))
+
+    application.add_handler(CallbackQueryHandler(button))
 
     # handles the pre-made keyboard
     application.add_handler(MessageHandler(filters.Regex('Support!'), helpInfo))
