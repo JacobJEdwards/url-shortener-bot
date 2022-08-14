@@ -5,11 +5,12 @@
 # test on multiple devices
 
 # future:
+# BOT TO SEND INFO ABOUT RASPBERRY PI
 # link to other bots
 # create chat for logging purposes visible to me
 # premium on one bot, premium on every bot (?)
-# work with databases instead of redis
-# look into hosting if heroku doesn't pan out - eventually hope to host on a raspberry pi
+# work with databases instead of redis (?)
+# look into hosting if heroku doesn't pan out - eventually hope to host on a raspberry pi DONE
 # make money
 # get bitches
 
@@ -19,19 +20,6 @@ import urllib
 
 import redis
 import requests
-from telegram import __version__ as TG_VER
-
-try:
-    from telegram import __version_info__
-except ImportError:
-    __version_info__ = (0, 0, 0, 0, 0)  # type: ignore[assignment]
-
-if __version_info__ < (20, 0, 0, "alpha", 1):
-    raise RuntimeError(
-        f"This example is not compatible with your current PTB version {TG_VER}. To view the "
-        f"{TG_VER} version of this example, "
-        f"visit https://docs.python-telegram-bot.org/en/v{TG_VER}/examples.html"
-    )
 
 from telegram import *
 
@@ -56,7 +44,6 @@ logger = logging.getLogger(__name__)
 
 
 r = redis.Redis()
-
 PAYMENT_TOKEN = 'pk_test_51LQZq4K5tAPUABZW9u9rUKSxSpMvuWRGAhByInPoXw97xKOKSdUCEEaJbqz7hE2aFbixiVPLFRbrR1FMnFmUlfMh00MMPtRlat'
 
 
@@ -105,10 +92,7 @@ async def start(update: Update, context: CallbackContext) -> None:
     userID = update.effective_user.id
 
     # used try except incase it being empty returns an error
-    try:
-        numUses = r.scard(str(userID))
-    except:
-        numUses = 0
+    numUses = r.scard(str(userID))
 
     if numUses == 0:
         await update.message.reply_text(f'Hello {userName}, welcome to URL Clipper Bot! \nIf you need any help, feel '
@@ -145,7 +129,6 @@ async def start(update: Update, context: CallbackContext) -> None:
 async def helpInfo(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text('Help!')
 
-
 # upgrade to premium - to include payment
 async def upgrade(update: Update, context: CallbackContext) -> None:
     if r.sismember('premium', update.effective_user.id):
@@ -167,26 +150,6 @@ async def myURLs(update: Update, context: CallbackContext) -> None:
     else:
         urlData = str(r.smembers(update.effective_user.id)).split(',')
         print(urlData)
-
-
-# async def getUserInfo(update: Update, context: CallbackContext) -> None:
-#     global userID
-#     global userName
-#     global premium
-#     global numUses
-#
-#     userID = update.effective_user.id
-#     userName = update.effective_user.first_name
-#
-#     if r.sismember('premium', userID) == 1:
-#         premium = True
-#     else:
-#         premium = False
-#
-#     try:
-#         numUses = r.scard(str(userID))
-#     except:
-#         numUses = 0
 
 
 def main() -> None:
