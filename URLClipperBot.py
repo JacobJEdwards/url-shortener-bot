@@ -31,9 +31,7 @@ from telegram.ext import (
     CallbackContext,
     CallbackQueryHandler,
     ContextTypes,
-    PreCheckoutQueryHandler,
-    PicklePersistence,
-    ShippingQueryHandler
+    PreCheckoutQueryHandler
 )
 
 # Enable logging
@@ -136,6 +134,12 @@ async def upgrade(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text('You are premium')
     else:
         r.sadd('premium', update.effective_user.id)
+        keyboard = [
+            [KeyboardButton("My URLs", callback_data="1")],
+            [KeyboardButton("Support!", callback_data="3")],
+        ]
+        menu_markup = ReplyKeyboardMarkup(keyboard)
+        await update.message.reply_text('Please select an option: ', reply_markup=menu_markup)
 
 
 # unknown command function
@@ -150,6 +154,7 @@ async def myURLs(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text('You have not shortened any URLs yet!')
     else:
         urlData = str(r.smembers(update.effective_user.id)).split(',')
+        await update.message.reply_text('---------')
 
         for i in range(0, len(urlData), 4):
             shortened = urlData[i+2].replace('shortLink:', '')
@@ -157,7 +162,7 @@ async def myURLs(update: Update, context: CallbackContext) -> None:
 
             await update.message.reply_text(title)
             await update.message.reply_text(shortened)
-        print(urlData)
+            await update.message.reply_text('---------')
 
 
 def main() -> None:
