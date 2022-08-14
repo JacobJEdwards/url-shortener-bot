@@ -57,10 +57,10 @@ async def URLShorten(update: Update, context: CallbackContext) -> None:
 
         toShorten = urllib.parse.quote(update.message.text)
 
-        data = requests.get('http://cutt.ly/api/api.php?key={}&short={}'.format(key, toShorten)).text
+        data = requests.get('http://cutt.ly/api/api.php?key={}&short={}'.format(key, toShorten)).text.replace('"', '').replace('\\', '').replace('}', '').replace('{', '').replace('url:status:7,', '')
 
         r.sadd(str(update.effective_user.id), data)
-        shortURL: str = data.rsplit('"')[15].replace('\\', "")
+        shortURL: str = data.rsplit(',')[2].replace('shortLink:', "")
 
         await context.bot.edit_message_text(message_id=messageID["message_id"], chat_id=chatID, text='Here is your '
                                                                                                      'shortened URL:')
@@ -129,6 +129,7 @@ async def start(update: Update, context: CallbackContext) -> None:
 async def helpInfo(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text('Help!')
 
+
 # upgrade to premium - to include payment
 async def upgrade(update: Update, context: CallbackContext) -> None:
     if r.sismember('premium', update.effective_user.id):
@@ -149,6 +150,13 @@ async def myURLs(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text('You have not shortened any URLs yet!')
     else:
         urlData = str(r.smembers(update.effective_user.id)).split(',')
+
+        for i in range(0, len(urlData), 4):
+            shortened = urlData[i+2].replace('shortLink:', '')
+            title = urlData[i+3].replace("title:", '').replace("'", "").replace('}', '')
+
+            await update.message.reply_text(title)
+            await update.message.reply_text(shortened)
         print(urlData)
 
 
