@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 
 r = redis.Redis()
-PAYMENT_TOKEN = 'pk_test_51LQZq4K5tAPUABZW9u9rUKSxSpMvuWRGAhByInPoXw97xKOKSdUCEEaJbqz7hE2aFbixiVPLFRbrR1FMnFmUlfMh00MMPtRlat'
+PAYMENT_TOKEN = '284685063:TEST:NmYwYmQyN2VlYmMw'
 
 
 # links to api
@@ -131,15 +131,33 @@ async def helpInfo(update: Update, context: CallbackContext) -> None:
 # upgrade to premium - to include payment
 async def upgrade(update: Update, context: CallbackContext) -> None:
     if r.sismember('premium', update.effective_user.id):
-        await update.message.reply_text('You are premium')
-    else:
-        r.sadd('premium', update.effective_user.id)
         keyboard = [
             [KeyboardButton("My URLs", callback_data="1")],
             [KeyboardButton("Support!", callback_data="3")],
         ]
         menu_markup = ReplyKeyboardMarkup(keyboard)
-        await update.message.reply_text('Please select an option: ', reply_markup=menu_markup)
+        await update.message.reply_text('You have already upgraded to premium', reply_markup=menu_markup)
+    else:
+        chat_id = update.effective_message.chat_id
+        title = "Payment Test"
+        description = 'Testing payment'
+        payload = 'URL Shortener Bot Premium'
+        currency = "USD"
+        price = 1
+        prices = [LabeledPrice('Test', price*100)]
+        await context.bot.send_invoice(
+            chat_id, title, description, payload, PAYMENT_TOKEN, currency, prices
+        )
+
+
+async def precheckout_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.pre_checkout_query
+    # check the payload, is this from your bot?
+    if query.invoice_payload != "URL Shortener Bot Premium":
+        # answer False pre_checkout_query
+        await query.answer(ok=False, error_message="Something went wrong...")
+    else:
+        await query.answer(ok=True)
 
 
 # unknown command function
@@ -165,6 +183,17 @@ async def myURLs(update: Update, context: CallbackContext) -> None:
             await update.message.reply_text('---------')
 
 
+async def upgradeSuccessful(update: Update, context: CallbackContext) -> None:
+    r.sadd('premium', update.effective_user.id)
+
+    keyboard = [
+        [KeyboardButton("My URLs", callback_data="1")],
+        [KeyboardButton("Support!", callback_data="3")],
+    ]
+    menu_markup = ReplyKeyboardMarkup(keyboard)
+    await update.message.reply_text('Thank you for upgrading!', reply_markup=menu_markup)
+
+
 def main() -> None:
     # creates application and passes the api token
     application = Application.builder().token("5524215935:AAFnV8SarFii_QaPzw7InyqniROsbVmmrPs").build()
@@ -179,6 +208,11 @@ def main() -> None:
     application.add_handler(MessageHandler(filters.Regex('Support!'), helpInfo))
     application.add_handler(MessageHandler(filters.Regex('My URLs'), myURLs))
     application.add_handler(MessageHandler(filters.Regex('Premium'), upgrade))
+
+    # Pre-checkout handler to final check
+    application.add_handler(PreCheckoutQueryHandler(precheckout_callback))
+
+    application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, upgradeSuccessful))
 
     # message handler - URL check
     application.add_handler(MessageHandler(filters.ALL &
