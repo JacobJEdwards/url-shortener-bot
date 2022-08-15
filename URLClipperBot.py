@@ -193,14 +193,10 @@ async def upgradeSuccessful(update: Update, context: CallbackContext) -> None:
     menu_markup = ReplyKeyboardMarkup(keyboard)
     await update.message.reply_text('Thank you for upgrading!', reply_markup=menu_markup)
 
-async def test(context: CallbackContext) -> None:
-    print('test')
 
 def main() -> None:
     # creates application and passes the api token
     application = Application.builder().token("5524215935:AAFnV8SarFii_QaPzw7InyqniROsbVmmrPs").build()
-
-    job_queue = application.job_queue
 
     # basic command handlers
     application.add_handler(CommandHandler('start', start))
