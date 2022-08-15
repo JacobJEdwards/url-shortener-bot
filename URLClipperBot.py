@@ -95,8 +95,6 @@ async def start(update: Update, context: CallbackContext) -> None:
     if numUses == 0:
         await update.message.reply_text(f'Hello {userName}, welcome to URL Clipper Bot! \nIf you need any help, feel '
                                         f'free to contact me through support!')
-    elif r.sismember('premium', userID) == 1:
-        await update.message.reply_text(f'Welcome back {userName}')
 
     elif numUses < 6:
         await update.message.reply_text(f'Welcome back {userName}\nYou have {5 - numUses} uses remaining!')
