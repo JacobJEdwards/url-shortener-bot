@@ -47,7 +47,7 @@ PAYMENT_TOKEN = '284685063:TEST:NmYwYmQyN2VlYmMw'
 
 # links to api
 async def URLShorten(update: Update, context: CallbackContext) -> None:
-    if r.scard(str(update.effective_user.id)) < 2 or r.sismember('premium', update.effective_user.id):
+    if r.scard(str(update.effective_user.id)) < 9 or r.sismember('premium', update.effective_user.id):
         chatID = update.message.chat_id
         messageID = await context.bot.send_message(text='fetching url...', chat_id=chatID)
 
@@ -81,7 +81,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
     await query.answer()
 
-    await query.edit_message_text(text='Premium')
+    await upgrade(update, context)
 
 
 # start function
@@ -95,9 +95,11 @@ async def start(update: Update, context: CallbackContext) -> None:
     if numUses == 0:
         await update.message.reply_text(f'Hello {userName}, welcome to URL Clipper Bot! \nIf you need any help, feel '
                                         f'free to contact me through support!')
+    elif r.sismember('premium', userID):
+        await update.message.reply_text(f'Welcome back {userName}')
 
-    elif numUses < 6:
-        await update.message.reply_text(f'Welcome back {userName}\nYou have {5 - numUses} uses remaining!')
+    elif numUses < 9:
+        await update.message.reply_text(f'Welcome back {userName}\nYou have {8 - numUses} uses remaining!')
 
     else:
         await update.message.reply_text(f'Welcome back {userName}')
@@ -191,10 +193,14 @@ async def upgradeSuccessful(update: Update, context: CallbackContext) -> None:
     menu_markup = ReplyKeyboardMarkup(keyboard)
     await update.message.reply_text('Thank you for upgrading!', reply_markup=menu_markup)
 
+async def test(context: CallbackContext) -> None:
+    print('test')
 
 def main() -> None:
     # creates application and passes the api token
     application = Application.builder().token("5524215935:AAFnV8SarFii_QaPzw7InyqniROsbVmmrPs").build()
+
+    job_queue = application.job_queue
 
     # basic command handlers
     application.add_handler(CommandHandler('start', start))
