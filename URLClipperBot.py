@@ -66,7 +66,7 @@ async def URLShorten(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text(shortURL)
 
     else:
-        await update.message.reply_text('Sorry you have reached the free trial limit!\nPlease upgrade to premium to '
+        await update.message.reply_text('Sorry you have reached the free trial limit!\n\nPlease upgrade to premium to '
                                         'continue')
         inlineKeyboard = [[InlineKeyboardButton('Upgrade to Premium', callback_data='1')]]
         reply_markup = InlineKeyboardMarkup(inlineKeyboard)
@@ -75,11 +75,9 @@ async def URLShorten(update: Update, context: CallbackContext) -> None:
 
 
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Parses the CallbackQuery and updates the message text."""
     query = update.callback_query
 
     # CallbackQueries need to be answered, even if no notification to the user is needed
-    # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
     await query.answer()
     await query.edit_message_text(text="Thank you for choosing to upgrade!\nPay below:")
     await upgrade(update, context)
@@ -94,12 +92,13 @@ async def start(update: Update, context: CallbackContext) -> None:
     numUses = r.scard(str(userID))
 
     if numUses == 0:
-        await update.message.reply_text(f'Hello {userName}, welcome to URL Clipper Bot! \nIf you need any help, feel '
-                                        f'free to contact me through support!')
+        await update.message.reply_text(f'Hello {userName}, welcome to URL Clipper Bot! \n\nIf you need any help, feel '
+                                        f'free to contact me through support!\n\nTo use this bot, simply send a URL, '
+                                        f'and it will be shortened automatically!\n\nThank you choosing us.')
     elif r.sismember('premium', userID):
         await update.message.reply_text(f'Welcome back {userName}')
 
-    elif numUses < 9:
+    elif numUses < 8:
         await update.message.reply_text(f'Welcome back {userName}\nYou have {8 - numUses} uses remaining!')
 
     else:
@@ -121,18 +120,18 @@ async def start(update: Update, context: CallbackContext) -> None:
         ]
 
     menu_markup = ReplyKeyboardMarkup(keyboard)
-    await update.message.reply_text('Please select an option: ', reply_markup=menu_markup)
+    await update.message.reply_text('Send a URL to get started, or select an option below:', reply_markup=menu_markup)
 
 
-# help function - to expand
+# help function
 async def helpInfo(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text('Hello,\nTo begin, simply send a link / URL, and the shortened version will be '
-                                    'sent to you automatically.\nView previously shortened URL\'s by clicking the '
-                                    '\"My URLs\" button.\nOr upgrade to premium for limitless use!\n\nFeel free to '
+    await update.message.reply_text('Hello,\n\nTo begin, simply send a link / URL, and the shortened version will be '
+                                    'sent to you automatically.\n\nView previously shortened URL\'s by clicking the '
+                                    '\"My URLs\" button.\n\nOr upgrade to premium for limitless use!\n\nFeel free to '
                                     'contact me @JacobJEdwards')
 
 
-# upgrade to premium - to include payment
+# upgrade to premium
 async def upgrade(update: Update, context: CallbackContext) -> None:
     if r.sismember('premium', update.effective_user.id):
         keyboard = [
@@ -143,12 +142,13 @@ async def upgrade(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text('You have already upgraded to premium', reply_markup=menu_markup)
     else:
         chat_id = update.effective_message.chat_id
-        title = "Payment Test"
-        description = 'Testing payment'
+        title = "Premium Upgrade -Limitless Use!"
+        description = 'Get unlimited uses, and full access to a range of bots now, and upcoming bots!\n\nContact ' \
+                      '@JacobJEdwards for details '
         payload = 'URL Shortener Bot Premium'
         currency = "USD"
         price = 1
-        prices = [LabeledPrice('Test', price*100)]
+        prices = [LabeledPrice('Upgrade', price*100)]
         await context.bot.send_invoice(
             chat_id, title, description, payload, PAYMENT_TOKEN, currency, prices
         )
@@ -166,10 +166,10 @@ async def precheckout_callback(update: Update, context: ContextTypes.DEFAULT_TYP
 
 # unknown command function
 async def unknownCommand(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text('Unknown command\nPlease use /help for help, or send a URL to shorten!')
+    await update.message.reply_text('Unknown command\n\nPlease use /help for help, or send a URL to shorten!')
 
 
-# my urls function - to complete
+# my urls function
 async def myURLs(update: Update, context: CallbackContext) -> None:
     uses = r.scard(update.effective_user.id)
     if uses == 0:
