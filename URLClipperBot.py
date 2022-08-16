@@ -50,7 +50,7 @@ PAYMENT_TOKEN = '284685063:TEST:NmYwYmQyN2VlYmMw'
 async def URLShorten(update: Update, context: CallbackContext) -> None:
     if r.scard(str(update.effective_user.id)) < 9 or r.sismember('premium', update.effective_user.id):
         chatID = update.message.chat_id
-        messageID = await context.bot.send_message(text='fetching url...', chat_id=chatID) # make italics - read snippets
+        messageID = await context.bot.send_message(text='_fetching url..._', chat_id=chatID, parse_mode='Markdown')
 
         key = ***REMOVED***
 
