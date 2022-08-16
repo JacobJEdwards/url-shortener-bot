@@ -5,7 +5,7 @@
 # test on multiple devices
 
 # future:
-# BOT TO SEND INFO ABOUT RASPBERRY PI
+# BOT TO SEND INFO ABOUT RASPBERRY PI IN PROGRESS
 # link to other bots
 # create chat for logging purposes visible to me
 # premium on one bot, premium on every bot (?)
@@ -13,6 +13,7 @@
 # look into hosting if heroku doesn't pan out - eventually hope to host on a raspberry pi DONE
 # make money
 # get bitches
+# use decode maybe instead of all the replaces
 
 
 import logging
@@ -49,7 +50,7 @@ PAYMENT_TOKEN = '284685063:TEST:NmYwYmQyN2VlYmMw'
 async def URLShorten(update: Update, context: CallbackContext) -> None:
     if r.scard(str(update.effective_user.id)) < 9 or r.sismember('premium', update.effective_user.id):
         chatID = update.message.chat_id
-        messageID = await context.bot.send_message(text='fetching url...', chat_id=chatID)
+        messageID = await context.bot.send_message(text='fetching url...', chat_id=chatID) # make italics - read snippets
 
         key = ***REMOVED***
 
