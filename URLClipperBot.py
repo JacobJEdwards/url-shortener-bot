@@ -91,7 +91,7 @@ async def start(update: Update, context: CallbackContext) -> None:
     # used try except incase it being empty returns an error
     numUses = r.scard(str(userID))
 
-    if numUses == 0:
+    if numUses == 0 and r.sismember('premium', userID) is False:
         await update.message.reply_text(f'Hello {userName}, welcome to URL Clipper Bot! \n\nIf you need any help, feel '
                                         f'free to contact me through support!\n\nTo use this bot, simply send a URL, '
                                         f'and it will be shortened automatically!\n\nThank you choosing us.')
@@ -138,8 +138,9 @@ async def upgrade(update: Update, context: CallbackContext) -> None:
             [KeyboardButton("My URLs", callback_data="1")],
             [KeyboardButton("Support!", callback_data="3")],
         ]
+
         menu_markup = ReplyKeyboardMarkup(keyboard)
-        await update.message.reply_text('You have already upgraded to premium', reply_markup=menu_markup)
+        await update.message.reply_text('You are premium!', reply_markup=menu_markup)
     else:
         chat_id = update.effective_message.chat_id
         title = "Premium Upgrade -Limitless Use!"
