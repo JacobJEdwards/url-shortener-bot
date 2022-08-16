@@ -48,7 +48,7 @@ PAYMENT_TOKEN = '284685063:TEST:NmYwYmQyN2VlYmMw'
 
 # links to api
 async def URLShorten(update: Update, context: CallbackContext) -> None:
-    if r.scard(str(update.effective_user.id)) < 9 or r.sismember('premium', update.effective_user.id):
+    if r.scard(str(update.effective_user.id)) < 8 or r.sismember('premium', update.effective_user.id):
         chatID = update.message.chat_id
         messageID = await context.bot.send_message(text='_fetching url..._', chat_id=chatID, parse_mode='Markdown')
 
@@ -81,7 +81,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # CallbackQueries need to be answered, even if no notification to the user is needed
     # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
     await query.answer()
-
+    await query.edit_message_text(text="Thank you for choosing to upgrade!\nPay below:")
     await upgrade(update, context)
 
 
@@ -126,7 +126,10 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 # help function - to expand
 async def helpInfo(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text('Help!')
+    await update.message.reply_text('Hello,\nTo begin, simply send a link / URL, and the shortened version will be '
+                                    'sent to you automatically.\nView previously shortened URL\'s by clicking the '
+                                    '\"My URLs\" button.\nOr upgrade to premium for limitless use!\n\nFeel free to '
+                                    'contact me @JacobJEdwards')
 
 
 # upgrade to premium - to include payment
@@ -192,7 +195,7 @@ async def upgradeSuccessful(update: Update, context: CallbackContext) -> None:
         [KeyboardButton("Support!", callback_data="3")],
     ]
     menu_markup = ReplyKeyboardMarkup(keyboard)
-    await update.message.reply_text('Thank you for upgrading!', reply_markup=menu_markup)
+    await update.message.reply_text('Upgrade successful! Welcome to premium.', reply_markup=menu_markup)
 
 
 def main() -> None:
