@@ -21,9 +21,7 @@ import urllib
 
 import redis
 import requests
-
 from telegram import *
-
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -41,7 +39,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 r = redis.Redis()
 PAYMENT_TOKEN = '284685063:TEST:NmYwYmQyN2VlYmMw'
 
@@ -56,7 +53,10 @@ async def URLShorten(update: Update, context: CallbackContext) -> None:
 
         toShorten = urllib.parse.quote(update.message.text)
 
-        data = requests.get('http://cutt.ly/api/api.php?key={}&short={}'.format(key, toShorten)).text.replace('"', '').replace('\\', '').replace('}', '').replace('{', '').replace('url:status:7,', '')
+        data = requests.get('http://cutt.ly/api/api.php?key={}&short={}'.format(key,
+                                                                                toShorten)).text.replace('"',
+                                                                                                         '').replace(
+            '\\', '').replace('}', '').replace('{', '').replace('url:status:7,', '')
 
         r.sadd(str(update.effective_user.id), data)
         shortURL: str = data.rsplit(',')[2].replace('shortLink:', "")
@@ -149,7 +149,7 @@ async def upgrade(update: Update, context: CallbackContext) -> None:
         payload = 'URL Shortener Bot Premium'
         currency = "USD"
         price = 1
-        prices = [LabeledPrice('Upgrade', price*100)]
+        prices = [LabeledPrice('Upgrade', price * 100)]
         await context.bot.send_invoice(
             chat_id, title, description, payload, PAYMENT_TOKEN, currency, prices
         )
@@ -180,8 +180,8 @@ async def myURLs(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text('---------')
 
         for i in range(0, len(urlData), 4):
-            shortened = urlData[i+2].replace('shortLink:', '')
-            title = urlData[i+3].replace("title:", '').replace("'", "").replace('}', '')
+            shortened = urlData[i + 2].replace('shortLink:', '')
+            title = urlData[i + 3].replace("title:", '').replace("'", "").replace('}', '')
 
             await update.message.reply_text(title)
             await update.message.reply_text(shortened)
