@@ -87,8 +87,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 # start function
 async def start(update: Update, context: CallbackContext) -> None:
     userName = update.effective_user.first_name
-    userID = update.effective_user.id
-    userKey = f'shortener:{userID}'
+    userKey = f'shortener:{update.effective_user.id}'
 
     # used try except incase it being empty returns an error
     numUses = r.scard(str(userKey))
