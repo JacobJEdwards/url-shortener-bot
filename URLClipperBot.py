@@ -87,31 +87,19 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 # start function
 async def start(update: Update, context: CallbackContext) -> None:
     userName = update.effective_user.first_name
-    userKey = f'shortener:{update.effective_user.id}'
+    userID = update.effective_user.id
+    userKey = f'shortener:{userID}'
 
-    # used try except incase it being empty returns an error
-    numUses = r.scard(str(userKey))
+    numUses = r.scard(userKey)
 
-    if numUses == 0 and r.sismember('premium', userID) is False:
-        await update.message.reply_text(f'Hello {userName}, welcome to URL Clipper Bot! \n\nIf you need any help, feel '
-                                        f'free to contact me through support!\n\nTo use this bot, simply send a URL, '
-                                        f'and it will be shortened automatically!\n\nThank you choosing us.')
-    elif r.sismember('premium', userID):
-        await update.message.reply_text(f'Welcome back {userName}')
+    if numUses == 0:
+        await update.message.reply_text(f'Hello {userName}, welcome to URL Clipper Bot.\nIf you need any help, feel '
+                                        f'free to contact me through support.\n\nTo use this bot, simply send a URL, '
+                                        f'and it will be shortened automatically!')
 
-    elif numUses < 8:
-        await update.message.reply_text(f'Welcome back {userName}\nYou have {8 - numUses} uses remaining!')
-
-    else:
-        await update.message.reply_text(f'Welcome back {userName}')
-
-    # different keyboards if premium or not - to also be added to premium function
-    if r.sismember('premium', update.effective_user.id):
-        keyboard = [
-            [KeyboardButton("My URLs", callback_data="1")],
-            [KeyboardButton("Support!", callback_data="3")],
-        ]
-    else:
+    if not r.sismember('premium', userID):
+        await update.message.reply_text(f'You have {8-numUses} uses remaining on your free trial.\nOr upgrade to '
+                                        f'Premium for unlimited use across a number of different bots!')
         keyboard = [
             [KeyboardButton("My URLs", callback_data="1")],
             [
@@ -120,6 +108,15 @@ async def start(update: Update, context: CallbackContext) -> None:
             ],
         ]
 
+    else:
+        await update.message.reply_text(f'Welcome back {userName}\n\nYou have already chosen to upgrade to premium.'
+                                        f'\nUnlimited use!')
+        keyboard = [
+            [KeyboardButton("My URLs", callback_data="1")],
+            [KeyboardButton("Support!", callback_data="3")],
+        ]
+
+    # different keyboards if premium or not - to also be added to premium function
     menu_markup = ReplyKeyboardMarkup(keyboard)
     await update.message.reply_text('Send a URL to get started, or select an option below:', reply_markup=menu_markup)
 
