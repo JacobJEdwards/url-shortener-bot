@@ -1,16 +1,10 @@
 # TO DO
-# redis doesnt work with heroku - use a database ! (learn how to use sql with python)
-# Complete my urls function
-# Add payment
 # test on multiple devices
 
 # future:
-# BOT TO SEND INFO ABOUT RASPBERRY PI IN PROGRESS
 # link to other bots
 # create chat for logging purposes visible to me
-# premium on one bot, premium on every bot (?)
 # work with databases instead of redis (?)
-# look into hosting if heroku doesn't pan out - eventually hope to host on a raspberry pi DONE
 # make money
 # get bitches
 # use decode maybe instead of all the replaces
@@ -200,7 +194,7 @@ async def upgradeSuccessful(update: Update, context: CallbackContext) -> None:
 
 def main() -> None:
     # creates application and passes the api token
-    application = Application.builder().token("5524215935:AAFnV8SarFii_QaPzw7InyqniROsbVmmrPs").build()
+    application = Application.builder().token(***REMOVED***).build()
 
     # basic command handlers
     application.add_handler(CommandHandler('start', start))
