@@ -45,7 +45,8 @@ PAYMENT_TOKEN = '284685063:TEST:NmYwYmQyN2VlYmMw'
 
 # links to api
 async def URLShorten(update: Update, context: CallbackContext) -> None:
-    if r.scard(str(update.effective_user.id)) < 8 or r.sismember('premium', update.effective_user.id):
+    userKey = f'shortener:{update.effective_user.id}'
+    if r.scard(str(userKey)) < 8 or r.sismember('premium', update.effective_user.id):
         chatID = update.message.chat_id
         messageID = await context.bot.send_message(text='_fetching url..._', chat_id=chatID, parse_mode='Markdown')
 
@@ -58,7 +59,7 @@ async def URLShorten(update: Update, context: CallbackContext) -> None:
                                                                                                          '').replace(
             '\\', '').replace('}', '').replace('{', '').replace('url:status:7,', '')
 
-        r.sadd(str(update.effective_user.id), data)
+        r.sadd(str(userKey), data)
         shortURL: str = data.rsplit(',')[2].replace('shortLink:', "")
 
         await context.bot.edit_message_text(message_id=messageID["message_id"], chat_id=chatID, text='Here is your '
@@ -87,9 +88,10 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def start(update: Update, context: CallbackContext) -> None:
     userName = update.effective_user.first_name
     userID = update.effective_user.id
+    userKey = f'shortener:{userID}'
 
     # used try except incase it being empty returns an error
-    numUses = r.scard(str(userID))
+    numUses = r.scard(str(userKey))
 
     if numUses == 0 and r.sismember('premium', userID) is False:
         await update.message.reply_text(f'Hello {userName}, welcome to URL Clipper Bot! \n\nIf you need any help, feel '
@@ -172,11 +174,12 @@ async def unknownCommand(update: Update, context: CallbackContext) -> None:
 
 # my urls function
 async def myURLs(update: Update, context: CallbackContext) -> None:
-    uses = r.scard(update.effective_user.id)
+    userKey = f'shortener:{update.effective_user.id}'
+    uses = r.scard(userKey)
     if uses == 0:
         await update.message.reply_text('You have not shortened any URLs yet!')
     else:
-        urlData = str(r.smembers(update.effective_user.id)).split(',')
+        urlData = str(r.smembers(userKey)).split(',')
         await update.message.reply_text('---------')
 
         for i in range(0, len(urlData), 4):
