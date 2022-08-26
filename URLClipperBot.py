@@ -46,7 +46,7 @@ PAYMENT_TOKEN = '284685063:TEST:NmYwYmQyN2VlYmMw'
 # links to api
 async def URLShorten(update: Update, context: CallbackContext) -> None:
     userKey = f'shortener:{update.effective_user.id}'
-    if r.scard(str(userKey)) < 8 or r.sismember('premium', update.effective_user.id):
+    if r.scard(userKey) < 9 or r.sismember('premium', update.effective_user.id):
         chatID = update.message.chat_id
         messageID = await context.bot.send_message(text='_fetching url..._', chat_id=chatID, parse_mode='Markdown')
 
@@ -59,7 +59,7 @@ async def URLShorten(update: Update, context: CallbackContext) -> None:
                                                                                                          '').replace(
             '\\', '').replace('}', '').replace('{', '').replace('url:status:7,', '')
 
-        r.sadd(str(userKey), data)
+        r.sadd(userKey, data)
         shortURL: str = data.rsplit(',')[2].replace('shortLink:', "")
 
         await context.bot.edit_message_text(message_id=messageID["message_id"], chat_id=chatID, text='Here is your '
