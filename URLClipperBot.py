@@ -9,6 +9,8 @@
 # get bitches
 # use decode maybe instead of all the replaces
 
+# can maybe use dictionary functions instead of all the replaces
+
 
 import logging
 import urllib
@@ -35,40 +37,47 @@ logger = logging.getLogger(__name__)
 
 r = redis.Redis()
 PAYMENT_TOKEN = '284685063:TEST:NmYwYmQyN2VlYmMw'
+apiKey = ***REMOVED***
 
 
-# links to api
+# links to api and shortens the url
 async def URLShorten(update: Update, context: CallbackContext) -> None:
-    userKey = f'shortener:{update.effective_user.id}'
-    if r.scard(userKey) < 9 or r.sismember('premium', update.effective_user.id):
-        chatID = update.message.chat_id
-        messageID = await context.bot.send_message(text='_fetching url..._', chat_id=chatID, parse_mode='Markdown')
+    userID = update.effective_user.id
+    userKey = f'shortener:{userID}'
 
-        key = ***REMOVED***
-
-        toShorten = urllib.parse.quote(update.message.text)
-
-        data = requests.get('http://cutt.ly/api/api.php?key={}&short={}'.format(key,
-                                                                                toShorten)).text.replace('"',
-                                                                                                         '').replace(
-            '\\', '').replace('}', '').replace('{', '').replace('url:status:7,', '')
-
-        r.sadd(userKey, data)
-        shortURL: str = data.rsplit(',')[2].replace('shortLink:', "")
-
-        await context.bot.edit_message_text(message_id=messageID["message_id"], chat_id=chatID, text='Here is your '
-                                                                                                     'shortened URL:')
-        await update.message.reply_text(shortURL)
-
-    else:
+    # checks the user can access the bot
+    if r.scard(userKey) < 9 and not r.sismember('premium', userID):
         await update.message.reply_text('Sorry you have reached the free trial limit!\n\nPlease upgrade to premium to '
                                         'continue')
+
+        # sends inline message for user to upgrade
         inlineKeyboard = [[InlineKeyboardButton('Upgrade to Premium', callback_data='1')]]
         reply_markup = InlineKeyboardMarkup(inlineKeyboard)
 
         await update.message.reply_text('Click:', reply_markup=reply_markup)
+        return
+
+    # shortens the url
+    chatID = update.message.chat_id
+    messageID = await context.bot.send_message(text='_fetching url..._', chat_id=chatID, parse_mode='Markdown')
+
+    toShorten = urllib.parse.quote(update.message.text)
+
+    # calls the api as saves as 'data'
+    data = requests.get('http://cutt.ly/api/api.php?key={}&short={}'.format(apiKey,
+                                                                            toShorten)).text.replace('"', '').replace(
+        '\\', '').replace('}', '').replace('{', '').replace('url:status:7,', '')
+
+    # adds the data to database
+    r.sadd(userKey, data)
+    # cuts the shortened url from all the data
+    shortURL: str = data.rsplit(',')[2].replace('shortLink:', "")
+
+    await context.bot.edit_message_text(message_id=messageID["message_id"], chat_id=chatID, text='Here is your '                                                                                   'shortened URL:')
+    await update.message.reply_text(shortURL)
 
 
+# handles the inline keyboard
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
 
@@ -80,10 +89,10 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 # start function
 async def start(update: Update, context: CallbackContext) -> None:
+    # gets user info
     userName = update.effective_user.first_name
     userID = update.effective_user.id
     userKey = f'shortener:{userID}'
-
     numUses = r.scard(userKey)
 
     if numUses == 0:
@@ -92,7 +101,7 @@ async def start(update: Update, context: CallbackContext) -> None:
                                         f'and it will be shortened automatically!')
 
     if not r.sismember('premium', userID):
-        await update.message.reply_text(f'You have {8-numUses} uses remaining on your free trial.\nOr upgrade to '
+        await update.message.reply_text(f'You have {8 - numUses} uses remaining on your free trial.\nOr upgrade to '
                                         f'Premium for unlimited use across a number of different bots!')
         keyboard = [
             [KeyboardButton("My URLs", callback_data="1")],
@@ -125,6 +134,7 @@ async def helpInfo(update: Update, context: CallbackContext) -> None:
 
 # upgrade to premium
 async def upgrade(update: Update, context: CallbackContext) -> None:
+    # checks user is not already premium
     if r.sismember('premium', update.effective_user.id):
         keyboard = [
             [KeyboardButton("My URLs", callback_data="1")],
@@ -133,6 +143,8 @@ async def upgrade(update: Update, context: CallbackContext) -> None:
 
         menu_markup = ReplyKeyboardMarkup(keyboard)
         await update.message.reply_text('You are premium!', reply_markup=menu_markup)
+
+    # generates and sends an invoice to user
     else:
         chat_id = update.effective_message.chat_id
         title = "Premium Upgrade -Limitless Use!"
@@ -147,6 +159,7 @@ async def upgrade(update: Update, context: CallbackContext) -> None:
         )
 
 
+# final check before payment is accepted
 async def precheckout_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.pre_checkout_query
     # check the payload, is this from your bot?
@@ -164,11 +177,14 @@ async def unknownCommand(update: Update, context: CallbackContext) -> None:
 
 # my urls function
 async def myURLs(update: Update, context: CallbackContext) -> None:
+    # gets user info
     userKey = f'shortener:{update.effective_user.id}'
     uses = r.scard(userKey)
+
     if uses == 0:
         await update.message.reply_text('You have not shortened any URLs yet!')
     else:
+        # sends a list of their urls to user
         urlData = str(r.smembers(userKey)).split(',')
         await update.message.reply_text('---------')
 
@@ -181,6 +197,7 @@ async def myURLs(update: Update, context: CallbackContext) -> None:
             await update.message.reply_text('---------')
 
 
+# called when payment has been made - adds user to premium key
 async def upgradeSuccessful(update: Update, context: CallbackContext) -> None:
     r.sadd('premium', update.effective_user.id)
 
@@ -192,6 +209,7 @@ async def upgradeSuccessful(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text('Upgrade successful! Welcome to premium.', reply_markup=menu_markup)
 
 
+# generates the bot and handlers
 def main() -> None:
     # creates application and passes the api token
     application = Application.builder().token(***REMOVED***).build()
@@ -200,6 +218,7 @@ def main() -> None:
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('help', helpInfo))
 
+    # inline keyboard handler
     application.add_handler(CallbackQueryHandler(button))
 
     # handles the pre-made keyboard
@@ -212,7 +231,7 @@ def main() -> None:
 
     application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, upgradeSuccessful))
 
-    # message handler - URL check
+    # handles urls
     application.add_handler(MessageHandler(filters.ALL &
                                            (filters.Entity(MessageEntity.URL) | filters.Entity(
                                                MessageEntity.TEXT_LINK)),
@@ -226,5 +245,6 @@ def main() -> None:
     application.run_polling()
 
 
+# runs the program
 if __name__ == '__main__':
     main()
