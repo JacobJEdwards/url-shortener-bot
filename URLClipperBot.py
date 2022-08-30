@@ -44,9 +44,10 @@ apiKey = ***REMOVED***
 async def URLShorten(update: Update, context: CallbackContext) -> None:
     userID = update.effective_user.id
     userKey = f'shortener:{userID}'
+    numUses = r.scard(userKey)
 
     # checks the user can access the bot
-    if r.scard(userKey) < 9 and not r.sismember('premium', userID):
+    if numUses < 7 and not r.sismember('premium', userID):
         await update.message.reply_text('Sorry you have reached the free trial limit!\n\nPlease upgrade to premium to '
                                         'continue')
 
