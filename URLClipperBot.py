@@ -51,7 +51,7 @@ async def URLShorten(update: Update, context: CallbackContext) -> None:
                                         'continue')
 
         # sends inline message for user to upgrade
-        inlineKeyboard = [[InlineKeyboardButton('Upgrade to Premium', callback_data='1')]]
+        inlineKeyboard = [[InlineKeyboardButton('Upgrade to Premium', callback_data='upgrade')]]
         reply_markup = InlineKeyboardMarkup(inlineKeyboard)
 
         await update.message.reply_text('Click:', reply_markup=reply_markup)
@@ -84,8 +84,13 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     # CallbackQueries need to be answered, even if no notification to the user is needed
     await query.answer()
-    await query.edit_message_text(text="Thank you for choosing to upgrade!\nPay below:")
-    await upgrade(update, context)
+
+    if query.data == 'upgrade':
+        await query.edit_message_text(text="Thank you for choosing to upgrade!\nPay below:")
+        await upgrade(update, context)
+
+    else:
+        await query.edit_message_text(text='Invalid option')
 
 
 # start function
