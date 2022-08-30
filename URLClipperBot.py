@@ -152,8 +152,8 @@ async def upgrade(update: Update, context: CallbackContext) -> None:
                       '@JacobJEdwards for details '
         payload = 'URL Shortener Bot Premium'
         currency = "USD"
-        price = 1
-        prices = [LabeledPrice('Upgrade', price * 100)]
+        price = 15
+        prices = [LabeledPrice('Upgrade', price * 10)]
         await context.bot.send_invoice(
             chat_id, title, description, payload, PAYMENT_TOKEN, currency, prices
         )
