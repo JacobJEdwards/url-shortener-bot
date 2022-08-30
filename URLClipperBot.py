@@ -59,7 +59,7 @@ async def URLShorten(update: Update, context: CallbackContext) -> None:
 
     # shortens the url
     chatID = update.message.chat_id
-    messageID = await context.bot.send_message(text='_fetching url..._', chat_id=chatID, parse_mode='Markdown')
+    message = await context.bot.send_message(text='_fetching url..._', chat_id=chatID, parse_mode='Markdown')
 
     toShorten = urllib.parse.quote(update.message.text)
 
@@ -73,7 +73,8 @@ async def URLShorten(update: Update, context: CallbackContext) -> None:
     # cuts the shortened url from all the data
     shortURL: str = data.rsplit(',')[2].replace('shortLink:', "")
 
-    await context.bot.edit_message_text(message_id=messageID["message_id"], chat_id=chatID, text='Here is your '                                                                                   'shortened URL:')
+    await context.bot.edit_message_text(message_id=message["message_id"], chat_id=chatID, text='Here is your '
+                                                                                               'shortened URL:')
     await update.message.reply_text(shortURL)
 
 
