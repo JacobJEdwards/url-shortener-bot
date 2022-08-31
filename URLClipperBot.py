@@ -44,10 +44,11 @@ apiKey = ***REMOVED***
 async def URLShorten(update: Update, context: CallbackContext) -> None:
     userID = update.effective_user.id
     userKey = f'shortener:{userID}'
-    numUses = r.scard(userKey)
+    numUses = r.zscore('urlShortenerBot', userID)
+    numUses = 0 if numUses is None else int(numUses)
 
     # checks the user can access the bot
-    if numUses < 7 and not r.sismember('premium', userID):
+    if numUses > 7 and not r.sismember('premium', userID):
         await update.message.reply_text('Sorry you have reached the free trial limit!\n\nPlease upgrade to premium to '
                                         'continue')
 
@@ -71,6 +72,8 @@ async def URLShorten(update: Update, context: CallbackContext) -> None:
 
     # adds the data to database
     r.sadd(userKey, data)
+    # increments uses
+    r.zincrby('urlShortenerBot', 1, userID)
     # cuts the shortened url from all the data
     shortURL: str = data.rsplit(',')[2].replace('shortLink:', "")
 
@@ -99,8 +102,8 @@ async def start(update: Update, context: CallbackContext) -> None:
     # gets user info
     userName = update.effective_user.first_name
     userID = update.effective_user.id
-    userKey = f'shortener:{userID}'
-    numUses = r.scard(userKey)
+    numUses = r.zscore('urlShortenerBot', userID)
+    numUses = 0 if numUses is None else int(numUses)
 
     if numUses == 0:
         await update.message.reply_text(f'Hello {userName}, welcome to URL Clipper Bot.\nIf you need any help, feel '
@@ -185,7 +188,8 @@ async def unknownCommand(update: Update, context: CallbackContext) -> None:
 # my urls function
 async def myURLs(update: Update, context: CallbackContext) -> None:
     # gets user info
-    userKey = f'shortener:{update.effective_user.id}'
+    userID = update.effective_user.id
+    userKey = f'shortener:{userID}'
     uses = r.scard(userKey)
 
     if uses == 0:
