@@ -228,6 +228,8 @@ def main() -> None:
     # basic command handlers
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('help', helpInfo))
+    application.add_handler(CommandHandler('myurls', myURLs))
+    application.add_handler(CommandHandler('upgrade'))
 
     # inline keyboard handler
     application.add_handler(CallbackQueryHandler(button))
