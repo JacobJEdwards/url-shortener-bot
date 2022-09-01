@@ -17,9 +17,17 @@ import urllib
 
 import redis
 import requests
-from telegram import *
+from telegram import (
+    Update,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
+    MessageEntity,
+    LabeledPrice
+)
 from telegram.ext import (
-    Application,
+    ApplicationBuilder,
     CommandHandler,
     MessageHandler,
     filters,
@@ -223,7 +231,7 @@ async def upgradeSuccessful(update: Update, context: CallbackContext) -> None:
 # generates the bot and handlers
 def main() -> None:
     # creates application and passes the api token
-    application = Application.builder().token(***REMOVED***).build()
+    application = ApplicationBuilder().token(***REMOVED***).build()
 
     # basic command handlers
     application.add_handler(CommandHandler('start', start))
