@@ -44,8 +44,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 r = redis.Redis()
-PAYMENT_TOKEN = '284685063:TEST:NmYwYmQyN2VlYmMw'
-apiKey = ***REMOVED***
+PAYMENT_TOKEN = ***REMOVED***
+API_KEY = ***REMOVED***
 
 
 # links to api and shortens the url
@@ -74,7 +74,7 @@ async def URLShorten(update: Update, context: CallbackContext) -> None:
     toShorten = urllib.parse.quote(update.message.text)
 
     # calls the api as saves as 'data'
-    data = requests.get('http://cutt.ly/api/api.php?key={}&short={}'.format(apiKey,
+    data = requests.get('http://cutt.ly/api/api.php?key={}&short={}'.format(API_KEY,
                                                                             toShorten)).text.replace('"', '').replace(
         '\\', '').replace('}', '').replace('{', '').replace('url:status:7,', '')
 
