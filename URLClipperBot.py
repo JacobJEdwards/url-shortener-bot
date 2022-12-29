@@ -237,7 +237,7 @@ def main() -> None:
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('help', helpInfo))
     application.add_handler(CommandHandler('myurls', myURLs))
-    application.add_handler(CommandHandler('upgrade'))
+    application.add_handler(CommandHandler('upgrade', upgrade))
 
     # inline keyboard handler
     application.add_handler(CallbackQueryHandler(button))
