@@ -122,10 +122,10 @@ async def start(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text(f'You have {8 - numUses} uses remaining on your free trial.\nOr upgrade to '
                                         f'Premium for unlimited use across a number of different bots!')
         keyboard = [
-            [KeyboardButton("My URLs", callback_data="1")],
+            [KeyboardButton("My URLs")],
             [
-                KeyboardButton("Premium", callback_data="2"),
-                KeyboardButton("Support!", callback_data="3"),
+                KeyboardButton("Premium"),
+                KeyboardButton("Support!"),
             ],
         ]
 
@@ -133,8 +133,8 @@ async def start(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text(f'Welcome back {userName}\n\nYou have already chosen to upgrade to premium.'
                                         f'\nUnlimited use!')
         keyboard = [
-            [KeyboardButton("My URLs", callback_data="1")],
-            [KeyboardButton("Support!", callback_data="3")],
+            [KeyboardButton("My URLs")],
+            [KeyboardButton("Support!")],
         ]
 
     # different keyboards if premium or not - to also be added to premium function
