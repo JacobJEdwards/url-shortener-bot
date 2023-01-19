@@ -14,6 +14,7 @@
 
 import logging
 import urllib
+import os
 
 import redis
 import requests
@@ -37,6 +38,14 @@ from telegram.ext import (
     PreCheckoutQueryHandler
 )
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
+PAYMENT_TOKEN: str = os.getenv('PAYMENT_TOKEN', '')
+BOT_API_TOKEN: str = os.getenv('BOT_API_TOKEN', '')
+API_KEY: str = os.getenv('API_KEY', '')
+
 # Enable logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -44,8 +53,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 r = redis.Redis()
-PAYMENT_TOKEN = ***REMOVED***
-API_KEY = ***REMOVED***
 
 
 # links to api and shortens the url
@@ -231,7 +238,7 @@ async def upgradeSuccessful(update: Update, context: CallbackContext) -> None:
 # generates the bot and handlers
 def main() -> None:
     # creates application and passes the api token
-    application = ApplicationBuilder().token(***REMOVED***).build()
+    application = ApplicationBuilder().token(BOT_API_TOKEN).build()
 
     # basic command handlers
     application.add_handler(CommandHandler('start', start))
